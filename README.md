@@ -1,4 +1,4 @@
-# Health Check API
+# Cloud Native Web Application
 - This is a Node.js REST API built with Express and PostgreSQL using Sequelize ORM. The API provides a health check endpoint (/healthz) that checks the connection to a PostgreSQL database and returns appropriate HTTP status codes.
 
 ## Prerequisites for running the API
@@ -48,6 +48,12 @@
     ```
     npm run dev
     ```
+6. Hit api using curl or configure postman or Bruno
+    ```
+    curl -X GET http://localhost:8080/healthz
+
+    ```
+
 
 ## API Endpoints
 - API Endpoints
@@ -63,9 +69,4 @@
     ```
     400 Bad Request: If the request contains an unexpected payload.
     405 Method Not Allowed: If an unsupported method (e.g., POST, PUT) is used on the /healthz endpoint.
-    ```
-- Hit api using curl or configure postman
-    ```
-    curl -X GET http://localhost:8080/healthz
-
     ```
