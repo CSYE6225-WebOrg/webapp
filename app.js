@@ -1,7 +1,7 @@
 //Defining the app and entry point(route)
 require('dotenv').config();
 const express = require('express');
-const healthRoutes = require('./routes/healthRoutes.js');
+const healthCheckRoutes = require('./routes/healthCheckRoutes');
 
 const app = express();
 

@@ -1,4 +1,4 @@
-const { checkDbConnection } = require('../services/dbService');
+const { checkDbConnection } = require('../services/connectionService');
 const { sendResponse, sendErrorResponse } = require('./responseHandler');
 
 // Health check controller with try catch
@@ -24,7 +24,7 @@ const healthCheck = async (request, response) => {
   }
 } catch (error) {
   console.error('Error in health check:', error);
-  return sendErrorResponse(response, 501, 'Internal Server Error');
+  return sendErrorResponse(response, 500, 'Internal Server Error');
 }
 };
 
