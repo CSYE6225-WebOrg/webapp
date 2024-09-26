@@ -8,7 +8,7 @@ const app = express();
 // Middleware for parsing JSON
 app.use(express.json());
 
-// API routes
-app.use('/', healthRoutes);
+// API routes(entry points)
+app.use('/', healthCheckRoutes);
 
 module.exports = app;
