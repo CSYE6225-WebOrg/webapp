@@ -1,14 +1,19 @@
 //Defining the app and entry point(route)
-require('dotenv').config();
-const express = require('express');
-const healthCheckRoutes = require('./routes/healthCheckRoutes');
+import {config} from 'dotenv';
+import express from 'express';
+import router from './routes/index.js';
+import { syncDb } from '../webapp/models/user.js';
+import { checkDbConnection } from './services/connectionService.js';
 
-const app = express();
+config();
+checkDbConnection();
+//  syncDb();
+export const app = express();
 
 // Middleware for parsing JSON
 app.use(express.json());
-
+app.use(express.urlencoded({ extended: true }));
 // API routes(entry points)
-app.use('/', healthCheckRoutes);
+app.use('/', router);
 
-module.exports = app;
+export default app;

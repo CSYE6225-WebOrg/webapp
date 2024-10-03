@@ -1,5 +1,5 @@
 //initiating the app
-const app = require('./app');
+import {app} from './app.js';
 
 // Start the server on the defined env port
 const PORT = process.env.PORT || 8080;
