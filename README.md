@@ -30,9 +30,10 @@
    ```
    npm init -y
    ```
-3. Install dependencies like Express, Sequelize(pg, pg-hstore), dotenv
+3. Install dependencies like Express, Sequelize(pg, pg-hstore), dotenv, jest, babel
    ```
    npm install express sequelize pg pg-hstore dotenv
+   npm install --save-dev jest supertest @babel/core @babel/preset-env babel-jest
    ```
 4. Create a .env file and add the following parameters.
    ```
@@ -53,7 +54,10 @@
     curl -X GET http://localhost:8080/healthz
 
     ```
-
+7. Run the test module using following command.
+   ```
+   npm test
+   ```
 
 ## API Endpoints
 - API Endpoints
