@@ -1,19 +1,29 @@
-const express = require('express');
-const { healthCheck } = require('../controllers/healthCheckController');
+//const express = require('express');
+import express from 'express';
+//const { healthCheck } = require('../controllers/healthCheckController');
+import * as healthz from '../controllers/healthCheckController.js';
 //utilize response handler for sending responses
-const { sendErrorResponse } = require('../controllers/responseHandler');
-const router = express.Router();
+import { sendErrorResponse } from '../controllers/responseHandler.js';
+//const { sendErrorResponse } = require('../controllers/responseHandler');
+export const healthRoutes = express.Router();
 
-// Health check route, allowing only GET requests with /healthz endpoint
-router.get('/healthz', healthCheck);
-
-// Handle unsupported methods
-router.all('/healthz', (request, response) => {
+healthRoutes.head('', (request, response) => {
   return sendErrorResponse(response, 405, 'Method not allowed');
 });
 
+// Health check route, allowing only GET requests with /healthz endpoint
+healthRoutes.get('', healthz.healthCheck);
+
+// Handle unsupported methods
+healthRoutes.all('', healthz.healthCheckInvalidMethods)
+// healthRoutes.all('', (request, response) => {
+//   return sendErrorResponse(response, 405, 'Method not allowed');
+// });
+
 //Handle wrong routes
-router.all("*", (request, response) => {
-  return sendErrorResponse(response, 404, 'Invalid request');
-  });
-module.exports = router;
+healthRoutes.all("*", healthz.healthCheckAllMethods);
+// healthRoutes.all("*", (request, response) => {
+//   return sendErrorResponse(response, 404, 'Invalid request');
+//   });
+
+export default healthRoutes;
