@@ -1,8 +1,7 @@
-const { checkDbConnection } = require('../services/connectionService');
-const { sendResponse, sendErrorResponse } = require('./responseHandler');
-
+ import { checkDbConnection } from '../services/connectionService.js';
+ import { sendResponse, sendErrorResponse } from './responseHandler.js';
 // Health check controller with try catch
-const healthCheck = async (request, response) => {
+export const healthCheck = async (request, response) => {
   try {
     const contentTypeLength = request.get("content-type")
     ? request.get("content-type").length
@@ -11,7 +10,7 @@ const healthCheck = async (request, response) => {
   if (contentTypeLength != 0 ||
     Object.keys(request.body).length != 0 ||
     Object.keys(request.query).length != 0) {
-    return sendResponse(response, 400, 'Bad Request');
+    return sendErrorResponse(response, 400, 'Bad Request');
   }
 
   // Check the database connection
@@ -28,6 +27,19 @@ const healthCheck = async (request, response) => {
 }
 };
 
-module.exports = {
+//deny methods other than GET
+export const healthCheckInvalidMethods = (request, response) => {
+  if (request.method != "GET") {
+    return sendErrorResponse(response, 405, 'Method not allowed');
+  }
+};
+
+export const healthCheckAllMethods = (request, response) => {
+  
+    return sendErrorResponse(response, 405, 'Method not allowed');
+  
+};
+export default {
   healthCheck,
+  healthCheckAllMethods
 };
