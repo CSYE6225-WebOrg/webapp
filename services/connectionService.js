@@ -1,8 +1,10 @@
-const { Sequelize } = require('sequelize');
+import { Sequelize } from 'sequelize';
+import { config } from "dotenv";
+config();
 
 // Create Sequelize instance for PostgreSQL
 // Database connection details are read from .env file
-const sequelize = new Sequelize(
+export const sequelize = new Sequelize(
   process.env.DB_NAME,
   process.env.DB_USER,
   process.env.DB_PASSWORD,
@@ -14,8 +16,9 @@ const sequelize = new Sequelize(
   }
 );
 
+
 // Function to test database connectivity for controller to utilize
-const checkDbConnection = async () => {
+export const checkDbConnection = async () => {
   try {
     await sequelize.authenticate();
     console.log('Connection to the database has been established successfully.');
@@ -26,7 +29,10 @@ const checkDbConnection = async () => {
   }
 };
 
-module.exports = {
+
+  
+
+export default {
   sequelize,
-  checkDbConnection,
+  checkDbConnection
 };
