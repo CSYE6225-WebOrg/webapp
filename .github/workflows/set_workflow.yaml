@@ -27,6 +27,9 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y postgresql postgresql-contrib
+          
+      - name : Install Babel CLI
+        run: npm install --save-dev @babel/cli @babel/core @babel/preset-env
  
       # Step 5: Start PostgreSQL service and create or update the test database user
       - name: Set up PostgreSQL
