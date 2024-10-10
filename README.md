@@ -1,5 +1,5 @@
 # Cloud Native Web Application
-- This is a Node.js REST API built with Express and PostgreSQL using Sequelize ORM. The API provides a health check endpoint (/healthz) that checks the connection to a PostgreSQL database and returns appropriate HTTP status codes.
+- This is a Node.js REST API built with Express and PostgreSQL using Sequelize ORM. The API provides a health check endpoint (/healthz) that checks the connection to a PostgreSQL database and returns appropriate HTTP status codes. Encorporated with workflows.
 
 ## Prerequisites for running the API
 - Before building and deploying the application locally, ensure that the following tools are installed:
@@ -58,6 +58,8 @@
    ```
    npm test
    ```
+## Encorporate with github workflows
+- Use secrets
 
 ## API Endpoints
 - API Endpoints
