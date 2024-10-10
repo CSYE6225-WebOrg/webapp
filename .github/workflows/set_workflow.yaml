@@ -1,0 +1,50 @@
+name: Webapp Test Workflow
+ 
+# Run this workflow on pull requests to main branch
+on:
+  pull_request:
+    branches:
+      - main
+ 
+jobs:
+  test:
+    name: webapp-check
+    runs-on: ubuntu-latest
+ 
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+ 
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: "22.2.0"
+ 
+      - name: Install dependencies
+        run: npm install
+ 
+      - name: Install PostgreSQL
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y postgresql postgresql-contrib
+ 
+      # Step 5: Start PostgreSQL service and create or update the test database user
+      - name: Set up PostgreSQL
+        run: |
+          sudo service postgresql start
+          sudo -u postgres psql -c "CREATE USER ${{ secrets.DB_USER }} WITH PASSWORD '${{ secrets.DB_PASSWORD }}';"
+          sudo -u postgres psql -c "CREATE DATABASE ${{ secrets.DB_NAME }};"
+          sudo -u postgres psql -c "GRANT ALL PRIVILEGES ON DATABASE ${{ secrets.DB_NAME }} TO ${{ secrets.DB_USER }};"
+          sudo -u postgres psql -c "ALTER DATABASE ${{ secrets.DB_NAME }} OWNER TO ${{ secrets.DB_USER }};"
+ 
+        # Step 6: Run the tests
+      - name: Run tests
+        env:
+          DB_HOST: ${{secrets.DB_HOST }}
+          DB_PORT: ${{secrets.DB_PORT}}
+          PORT: ${{secrets.PORT}}
+          DB_USER: ${{ secrets.DB_USER }}
+          DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+          DB_NAME: ${{ secrets.DB_NAME }}
+          DIALECT: ${{secrets.DIALECT}}
+        run: npm test

@@ -130,4 +130,3 @@ dist
 .pnp.*
 
 # .babelrc (if not committed)
-.babelrc
