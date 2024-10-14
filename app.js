@@ -7,7 +7,7 @@ import { checkDbConnection } from './services/connectionService.js';
 
 config();
 checkDbConnection();
-  //syncDb();
+  syncDb();
 export const app = express();
 
 // Middleware for parsing JSON
