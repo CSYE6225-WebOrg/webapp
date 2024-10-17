@@ -1,0 +1,61 @@
+name: Packer Build
+
+on:
+  pull_request:
+    types:
+      - closed
+    branches:
+      - main
+
+jobs:
+  build-ami:
+    if: github.event.pull_request.merged == true
+    runs-on: ubuntu-latest
+    name: Packer Build
+    env:
+      HOST: ${{secrets.HOST }}
+      PORT: ${{secrets.PORT}}
+      USER: ${{ secrets.USER }}
+      PASSWORD: ${{ secrets.PASSWORD }}
+      DATABASE: ${{ secrets.DATABASE }}
+      DIALECT: ${{secrets.DIALECT}}
+      AWS_ACCESS_KEY_ID: ${{secrets.AWS_ACCESS_KEY_ID}}
+      AWS_SECRET_ACCESS_KEY: ${{secrets.AWS_SECRET_ACCESS_KEY}}
+      ASSG_NAME: ${{secrets.ASSG_NAME}}
+      AWS_REGION: ${{secrets.AWS_REGION}}
+      BCRYPT_SALT_ROUNDS: ${{secrets.BCRYPT_SALT_ROUNDS}}
+      INSTANCE_TYPE: ${{secrets.INSTANCE_TYPE}}
+      SSH_USERNAME: ${{secrets.SSH_USERNAME}}
+      SUBNET_ID: ${{secrets.SUBNET_ID}}
+      VPC_ID: ${{secrets.VPC_ID}}
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+      
+      - name: Install Packer
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y unzip
+          curl -LO https://releases.hashicorp.com/packer/1.11.2/packer_1.11.2_linux_amd64.zip
+          unzip packer_1.11.2_linux_amd64.zip
+          sudo mv packer /usr/local/bin/
+          packer --version
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{secrets.AWS_REGION}}
+
+      - name: Create webapp.zip from existing directory
+        run: |
+          zip -r webapp.zip .
+        shell: bash
+
+      - name: Build AMI
+        working-directory: ./vm-image
+        run: |
+          packer init .
+          packer build aws.pkr.hcl

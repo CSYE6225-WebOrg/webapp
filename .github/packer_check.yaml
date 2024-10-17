@@ -1,0 +1,60 @@
+name: Packer Continuous Integration Actions For Status Check
+
+on:
+  pull_request:
+    types:
+      - opened
+      - synchronize
+    branches:
+      - main
+
+jobs:
+  packer_validation:
+    runs-on: ubuntu-latest
+    env:
+      HOST: ${{secrets.HOST }}
+      PORT: ${{secrets.PORT}}
+      USER: ${{ secrets.USER }}
+      PASSWORD: ${{ secrets.PASSWORD }}
+      DATABASE: ${{ secrets.DATABASE }}
+      DIALECT: ${{secrets.DIALECT}}
+      AWS_ACCESS_KEY_ID: ${{secrets.AWS_ACCESS_KEY_ID}}
+      AWS_SECRET_ACCESS_KEY: ${{secrets.AWS_SECRET_ACCESS_KEY}}
+      ASSG_NAME: ${{secrets.ASSG_NAME}}
+      AWS_REGION: ${{secrets.AWS_REGION}}
+      INSTANCE_TYPE: ${{secrets.INSTANCE_TYPE}}
+      SSH_USERNAME: ${{secrets.SSH_USERNAME}}
+      SUBNET_ID: ${{secrets.SUBNET_ID}}
+      VPC_ID: ${{secrets.VPC_ID}}
+      
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup Packer
+        uses: hashicorp/setup-packer@main
+      
+      - name: Initialize packer
+        run: |
+          packer init .
+        shell: bash
+
+      - name: Create Zip File of Webapp Repo
+        run: |
+          zip -r webapp.zip .
+
+      - name: Move Zip to Workflows Directory
+        run: mv webapp.zip vm-image/
+
+      - name: Format Packer Configs
+        run: |
+            packer fmt -check -recursive aws.pkr.hcl
+
+      - name: Check if formatting changed files
+        if: steps.format.outputs.changed == 'true'
+        run: exit 1
+
+      - name: Init and Validate Packer Configs
+        run: |
+          packer init aws.pkr.hcl
+          packer validate aws.pkr.hcl
