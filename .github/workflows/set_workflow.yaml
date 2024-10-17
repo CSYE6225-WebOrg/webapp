@@ -23,10 +23,10 @@ jobs:
       - name: Install dependencies
         run: npm install
  
-      - name: Install PostgreSQL
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y postgresql postgresql-contrib
+      # - name: Install PostgreSQL
+      #   run: |
+      #     sudo apt-get update
+      #     sudo apt-get install -y postgresql postgresql-contrib
       # Step 5: Start PostgreSQL service and create or update the test database user
       - name: Setup postgres
         uses: ikalnytskyi/action-setup-postgres@v6
@@ -35,14 +35,12 @@ jobs:
           password: ${{ secrets.DB_PASSWORD }}
           database: ${{ secrets.DB_NAME }}
           port: ${{secrets.DB_PORT}}
-          postgres-version: "17"
-          ssl: "on"
         id: postgres
 
       - name : Install Babel CLI
         run: npm install --save-dev @babel/cli @babel/core @babel/preset-env
  
-      # Step 5: Start PostgreSQL service and create or update the test database user
+      #Step 5: Start PostgreSQL service and create or update the test database user
       # - name: Set up PostgreSQL
       #   run: |
       #     sudo service postgresql start
