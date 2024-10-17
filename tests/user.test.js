@@ -1,11 +1,13 @@
 import request from 'supertest';
 import app from '../app.js';
 import User from '../models/user.js';
+import { syncDb } from '../models/user.js';
 import { sequelize, checkDbConnection } from '../services/connectionService.js';
 
 beforeAll(async () => {
   // Sync the database before running tests
   await checkDbConnection();
+  await syncDb;
 });
 
 afterAll(async () => {

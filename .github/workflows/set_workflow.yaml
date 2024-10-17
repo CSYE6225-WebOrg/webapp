@@ -23,22 +23,31 @@ jobs:
       - name: Install dependencies
         run: npm install
  
-      - name: Install PostgreSQL
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y postgresql postgresql-contrib
-          
+      # - name: Install PostgreSQL
+      #   run: |
+      #     sudo apt-get update
+      #     sudo apt-get install -y postgresql postgresql-contrib
+      # Step 5: Start PostgreSQL service and create or update the test database user
+      - name: Setup postgres
+        uses: ikalnytskyi/action-setup-postgres@v6
+        with: 
+          username: ${{ secrets.DB_USER }}
+          password: ${{ secrets.DB_PASSWORD }}
+          database: ${{ secrets.DB_NAME }}
+          port: ${{secrets.DB_PORT}}
+        id: postgres
+
       - name : Install Babel CLI
         run: npm install --save-dev @babel/cli @babel/core @babel/preset-env
  
-      # Step 5: Start PostgreSQL service and create or update the test database user
-      - name: Set up PostgreSQL
-        run: |
-          sudo service postgresql start
-          sudo -u postgres psql -c "CREATE USER ${{ secrets.DB_USER }} WITH PASSWORD '${{ secrets.DB_PASSWORD }}';"
-          sudo -u postgres psql -c "CREATE DATABASE ${{ secrets.DB_NAME }};"
-          sudo -u postgres psql -c "GRANT ALL PRIVILEGES ON DATABASE ${{ secrets.DB_NAME }} TO ${{ secrets.DB_USER }};"
-          sudo -u postgres psql -c "ALTER DATABASE ${{ secrets.DB_NAME }} OWNER TO ${{ secrets.DB_USER }};"
+      #Step 5: Start PostgreSQL service and create or update the test database user
+      # - name: Set up PostgreSQL
+      #   run: |
+      #     sudo service postgresql start
+      #     sudo -u postgres psql -c "CREATE USER ${{ secrets.DB_USER }} WITH PASSWORD '${{ secrets.DB_PASSWORD }}';"
+      #     sudo -u postgres psql -c "CREATE DATABASE ${{ secrets.DB_NAME }};"
+      #     sudo -u postgres psql -c "GRANT ALL PRIVILEGES ON DATABASE ${{ secrets.DB_NAME }} TO ${{ secrets.DB_USER }};"
+      #     sudo -u postgres psql -c "ALTER DATABASE ${{ secrets.DB_NAME }} OWNER TO ${{ secrets.DB_USER }};"
  
         # Step 6: Run the tests
       - name: Run tests
