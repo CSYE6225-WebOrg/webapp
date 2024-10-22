@@ -43,9 +43,6 @@ jobs:
         run: |
           zip -r webapp.zip .
 
-      - name: Move Zip to Workflows Directory
-        run: mv webapp.zip vm-image/
-
       - name: Format Packer Configs
         run: |
             packer fmt -check -recursive aws.pkr.hcl
