@@ -75,4 +75,4 @@ jobs:
       - name: Build AMI
         run: |
           packer init .
-          packer build aws.pkr.hcl
+          packer build -var-file=variables.pkrvars.hcl aws.pkr.hcl
