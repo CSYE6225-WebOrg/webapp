@@ -75,7 +75,7 @@ jobs:
 
 
       - name: packer validate
-        run: packer validate -var-file=variables.pkrvars.hcl
+        run: packer validate aws.pkr.hcl
 
       - name: Build AMI
         run: |
