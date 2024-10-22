@@ -60,15 +60,20 @@ jobs:
         run: |
           zip -r webapp.zip .
         shell: bash
+
+      - name: setup packer
+        uses: hashicorp/setup-packer@main
+        id: setup
+        with:
+            version: 1.11.2
       
       - name: packer init
         run: packer init .
       
       - name: packer fmt
-        run: packer fmt -check -recursive .
+        run: packer fmt -check -recursive aws.pkr.hcl
 
-      
-      
+
       - name: packer validate
         run: packer validate -var-file=variables.pkrvars.hcl
 
