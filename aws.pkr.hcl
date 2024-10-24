@@ -88,7 +88,7 @@ source "amazon-ebs" "my_ami" {
   access_key      = "${var.aws_access_key}"
   secret_key      = "${var.aws_secret_key}"
   region          = "${var.aws_region}"
-  ami_name        = "csye6225-app_${formatdate("YYYY_MM_DD_HH", timestamp())}"
+  ami_name        = "csye6225-app_${formatdate("YYYY_MM_DD-hhmmss", timestamp())}"
   ami_description = "An example ami created with packer"
   ami_users       = ["${var.ami_user_1}", "${var.ami_user_2}"]
 
