@@ -1,15 +1,15 @@
 [Unit]
-Description=CSYE 6225 Cloud WebApp App 
-ConditionPathExists=/opt/Cloud/webapp
+Description=CSYE 6225 Cloud WebApp App
 After=network.target
 
 [Service]
 Type=simple
 User=csye6225
 Group=csye6225
-WorkingDirectory=/opt/Cloud/webapp
-ExecStart=/usr/bin/node /opt/Cloud/webapp/index.js
-Restart=always
+WorkingDirectory=/opt/cloud/webapp
+ExecStartPre=/bin/bash -c 'while [ ! -f /opt/cloud/webapp/.env ]; do sleep 3; done'
+ExecStart=/usr/bin/node /opt/cloud/webapp/index.js
+Restart=on-failure
 RestartSec=3
 StandardOutput=syslog
 StandardError=syslog
