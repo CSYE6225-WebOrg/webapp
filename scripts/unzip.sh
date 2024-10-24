@@ -2,7 +2,7 @@
 
 sudo apt-get install -y unzip
 
-sudo mkdir -p /opt/Cloud/webapp
+sudo mkdir -p /opt/cloud/webapp
 
-sudo unzip /tmp/webapp.zip -d /opt/Cloud/webapp
+sudo unzip /tmp/webapp.zip -d /opt/cloud/webapp
 

@@ -88,7 +88,7 @@ source "amazon-ebs" "my_ami" {
   access_key      = "${var.aws_access_key}"
   secret_key      = "${var.aws_secret_key}"
   region          = "${var.aws_region}"
-  ami_name        = "packer-example_${formatdate("YYYY_MM_DD", timestamp())}"
+  ami_name        = "csye6225-app_${formatdate("YYYY_MM_DD_HH", timestamp())}"
   ami_description = "An example ami created with packer"
   ami_users       = ["${var.ami_user_1}", "${var.ami_user_2}"]
 
@@ -124,8 +124,7 @@ build {
 
     scripts = [
       "./scripts/update.sh",
-      "./scripts/setup.sh",
-      "./scripts/dbSetup.sh"
+      "./scripts/setup.sh"
     ]
   }
 
@@ -150,7 +149,8 @@ build {
 
     scripts = [
       "./scripts/unzip.sh",
-      "./scripts/setDependencies.sh"
+      "./scripts/setDependencies.sh",
+      "./scripts/systemSetup.sh"
     ]
   }
 

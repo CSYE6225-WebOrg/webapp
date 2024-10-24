@@ -129,4 +129,7 @@ dist
 .yarn/install-state.gz
 .pnp.*
 
-# .babelrc (if not committed)
+# .pkrvars (if not committed)
+# Ignore Packer variable files
+*.pkrvars.hcl
+*.pkrvars
