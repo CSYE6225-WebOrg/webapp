@@ -10,24 +10,28 @@ const userRoutes = express.Router();
  * @desc    Create a new user account
  * @access  Public
  */
+//Stop head
+userRoutes.head('', userController.userInvalidMethods);
+
 userRoutes.post('', userController.createUser);
+
+userRoutes.all('', userController.userInvalidMethods);
 
 /**
  * @route   PUT /users/me
  * @desc    Update the authenticated user's account information
  * @access  Private (Requires Basic Authentication)
  */
-userRoutes.put('', authenticate, userController.updateUser);
-//Stop head
-userRoutes.head('', authenticate, userController.userInvalidMethods);
+userRoutes.put('/self', authenticate, userController.updateUser);
+
 
 /**
  * @route   GET /users/me
  * @desc    Get the authenticated user's account information
  * @access  Private (Requires Basic Authentication)
  */
- userRoutes.get('', authenticate, userController.getUser);
+ userRoutes.get('/self', authenticate, userController.getUser);
 
- userRoutes.all('', userController.userInvalidMethods);
+
 
 export default userRoutes;

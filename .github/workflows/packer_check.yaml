@@ -26,6 +26,7 @@ jobs:
       SSH_USERNAME: ${{secrets.SSH_USERNAME}}
       SUBNET_ID: ${{secrets.SUBNET_ID}}
       VPC_ID: ${{secrets.VPC_ID}}
+      NODE_ENV: "TEST"
       
     steps:
       - name: Checkout Repository

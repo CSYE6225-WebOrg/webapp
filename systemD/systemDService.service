@@ -11,8 +11,8 @@ ExecStartPre=/bin/bash -c 'while [ ! -f /opt/cloud/webapp/.env ]; do sleep 3; do
 ExecStart=/usr/bin/node /opt/cloud/webapp/index.js
 Restart=on-failure
 RestartSec=3
-StandardOutput=syslog
-StandardError=syslog
+StandardOutput=/var/log/webapplogs/csye6225.log
+StandardError=/var/log/webapplogs/csye6225.log
 SyslogIdentifier=csye6225
 
 [Install]

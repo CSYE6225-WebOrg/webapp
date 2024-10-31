@@ -1,4 +1,5 @@
 import { DataTypes } from "sequelize";
+import {Image} from "./image.js";
 import { sequelize, checkDbConnection } from "../services/connectionService.js";
 
 // Define the User model
@@ -65,16 +66,19 @@ export const User = sequelize.define("User",
     }
   );
 
+  User.hasOne(Image, { foreignKey: 'user_id', onDelete: 'CASCADE' });
+  Image.belongsTo(User, { foreignKey: 'user_id' });
+
     //sync the database connection
-    export const syncDb = async () => {
-      try {
-        await checkDbConnection();
-        await User.sync();
-        console.log("User model synced successfully.");
-      } catch (error) {
-        console.error("Error syncing User model:", error);
-      }
-    };
+    // export const syncDb = async () => {
+    //   try {
+    //     await checkDbConnection();
+    //     await User.sync();
+    //     console.log("User model synced successfully.");
+    //   } catch (error) {
+    //     console.error("Error syncing User model:", error);
+    //   }
+    // };
   
 
   export default User;
