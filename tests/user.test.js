@@ -3,6 +3,7 @@ import app from '../app.js';
 import User from '../models/user.js';
 import { syncDb } from '../models/user.js';
 import { sequelize, checkDbConnection } from '../services/connectionService.js';
+import statsd from '../metrics.js';
 
 beforeAll(async () => {
   // Sync the database before running tests
@@ -12,6 +13,7 @@ beforeAll(async () => {
 
 afterAll(async () => {
   // Close database connection after tests are done
+  statsd.socket.close();
   await User.destroy({ where: {} });
 });
 
@@ -96,5 +98,5 @@ describe('User API Endpoints and Authenticator', () => {
     
   });
 
-  
+
 });
