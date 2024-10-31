@@ -1,9 +1,5 @@
 import AWS from 'aws-sdk';
 
-AWS.config.update({
-    region: process.env.AWS_REGION,
-    credentials: new AWS.SharedIniFileCredentials({ profile: 'dev' })
-  });
 
 const s3 = new AWS.S3({
    region: process.env.AWS_REGION

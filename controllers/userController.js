@@ -8,6 +8,7 @@ import { sendResponse, sendSuccessResponse,sendErrorResponse } from './responseH
 import *  as userService from '../services/userService.js';
 import * as s3Service from '../services/s3Service.js';
 import logger from '../winstonLogger.js';
+import statsd from '../metrics.js';
 
 /**
  * createUser - Creates a new user account.
@@ -17,6 +18,9 @@ import logger from '../winstonLogger.js';
  */
 export const createUser = async (request, response) => {
   // console.log('Creating user:', request.body);
+  logger.info("POST request for user:");
+  const startTime = Date.now();
+  statsd.increment('api.post.user.calls');
 
   //check if request content type is application/json
   const contentType = request.get('content-type');
@@ -50,6 +54,7 @@ export const createUser = async (request, response) => {
     }
 
   try {
+    const startDTime = Date.now();
     // Check if user with the email already exists
     const existingUser = await User.findOne({ where: { email } });
 
@@ -69,6 +74,8 @@ export const createUser = async (request, response) => {
       lastName,
     });
 
+    statsd.timing('db.create_user.query_time', Date.now()- startDTime);
+
     // Exclude password from the response
     const { password: _, ...userData } = newUser.toJSON();
     logger.info("New user created");
@@ -78,14 +85,22 @@ export const createUser = async (request, response) => {
     console.error('Error creating user:', error);
     return sendErrorResponse(response, 500, 'Internal Server Error: Unable to create user.');
   }
+  finally {
+    const duration = Date.now() - startTime; // Calculate duration
+    statsd.timing('api.post.user.response_time', duration); // Log API call duration
+}
 
 
 };
 
 export const getUser = async (request, response) => {
+  const startTime = Date.now();
+  statsd.increment('api.post.user.calls');
   const dbConnection = await checkDbConnection();
   //Service unavailable if database is not connected
   if (!dbConnection) {
+    const duration = Date.now() - startTime; // Calculate duration
+    statsd.timing('api.post.user.response_time', duration); // Log API call duration
     logger.error("Error: Database not connected");
     sendErrorResponse(response, 503, 'Service Unavailable');
     return;
@@ -127,11 +142,18 @@ export const getUser = async (request, response) => {
   console.error('Error retrieving user information:', error);
   return sendErrorResponse(response, 500, 'Internal Server Error: Unable to retrieve user information.');
 }
+finally {
+  const duration = Date.now() - startTime; // Calculate duration
+  statsd.timing('api.post.user.response_time', duration); // Log API call duration
+}
+
 }};
 
 
 
 export const updateUser = async (request, response) => {
+  const startTime = Date.now();
+  statsd.increment('api.post.user.calls');
   const { firstName, lastName, password } = request.body;
 
   try {
@@ -170,7 +192,10 @@ export const updateUser = async (request, response) => {
     }
 
     // Save updated user
+    
+    const startDTime = Date.now();
     await user.save();
+    statsd.timing('db.create_user.query_time', Date.now()- startDTime);
 
     // Exclude the password from the response
     const { password: _, ...userData } = user.toJSON();
@@ -181,18 +206,29 @@ export const updateUser = async (request, response) => {
     console.error('Error updating user:', error);
     return sendErrorResponse(response, 500, 'Internal Server Error: Unable to update user.');
   }
+  finally {
+    const duration = Date.now() - startTime; // Calculate duration
+    statsd.timing('api.post.user.response_time', duration); // Log API call duration
+}
+
 };
 
 //deny other methods
 export const userInvalidMethods = (request, response) => {
+  const startTime = Date.now();
+  statsd.increment('api.post.user.calls');
   logger.info("Bad Request: Method not allowed 405 response");
     return sendErrorResponse(response, 405, 'Method not allowed');
+    const duration = Date.now() - startTime; // Calculate duration
+    statsd.timing('api.post.user.response_time', duration); // Log API call duration
 };
 
 
 export const uploadPic = async (request, response) => {
  // const userId = request.headers['user-id']; // Assuming user ID is provided in headers
   const file = request.file;
+  const startTime = Date.now();
+  statsd.increment('api.post.user.calls');
   const dbConnection = await checkDbConnection();
 
   if (!dbConnection) {
@@ -218,7 +254,7 @@ export const uploadPic = async (request, response) => {
   }
 
   try {
-
+    const startDTime = Date.now();
     const existingImage = await Image.findOne({ where: { user_id: user.id } });
 
     if (existingImage) {
@@ -247,24 +283,38 @@ export const uploadPic = async (request, response) => {
       message: 'Image uploaded successfully',
       data: newImage
     });
+    statsd.timing('db.create_user.query_time', Date.now()- startDTime);
   } catch (error) {
     console.error('Error uploading image:', error);
     logger.error('Error uploading image:', error);
     response.status(500).json({ error: 'Failed to upload image' });
   }
+  finally {
+    const duration = Date.now() - startTime; // Calculate duration
+    statsd.timing('api.post.user.response_time', duration); // Log API call duration
+}
+
 }
 catch(error){
   console.error('Error uploading image:', error);
   logger.error('Error uploading image:', error);
   response.status(500).json({ error: 'Failed to upload image' });
 }
+finally {
+  const duration = Date.now() - startTime; // Calculate duration
+  statsd.timing('api.post.user.response_time', duration); // Log API call duration
+}
+
   }
 };
 
 export const getPic = async (request, response) => {
+  const startTime = Date.now();
+  statsd.increment('api.post.user.calls');
   const userId = request.user.id;
 
   try {
+    const startDTime = Date.now();
     const imageRecord = await Image.findOne({ where: { user_id: userId } });
     if (!imageRecord){ 
       logger.error('Image not found', error);
@@ -272,6 +322,7 @@ export const getPic = async (request, response) => {
     }
     // Generate presigned URL
     const url = await s3Service.getFileUrl(userId);
+    statsd.timing('db.create_user.query_time', Date.now()- startDTime);
     logger.info("Generated presigned url");
     response.status(200).json({ url:url });
   } catch (error) {
@@ -279,11 +330,18 @@ export const getPic = async (request, response) => {
     console.error('Error generating presigned URL:', error);
     response.status(500).json({ error: 'Failed to generate URL' });
   }
+  finally {
+    const duration = Date.now() - startTime; // Calculate duration
+    statsd.timing('api.post.user.response_time', duration); // Log API call duration
+}
 };
 
 export const deletePic = async (request, response) =>{
+  const startTime = Date.now();
+  statsd.increment('api.post.user.calls');
   const userId = request.user.id;
   try {
+    const startDTime = Date.now();
     const imageRecord = await Image.findOne({ where: { user_id: userId } });
     if (!imageRecord){ 
       logger.error('Image not found', error);
@@ -292,6 +350,7 @@ export const deletePic = async (request, response) =>{
     // Delete from S3 and then remove database record
     await s3Service.deleteFile(userId);
     await imageRecord.destroy();
+    statsd.timing('db.create_user.query_time', Date.now()- startDTime);
     logger.info('image deleted successfully');
     response.status(200).json({ message: 'Image deleted successfully' });
   } catch (error) {
@@ -299,4 +358,8 @@ export const deletePic = async (request, response) =>{
     console.error('Error deleting image:', error);
     response.status(500).json({ error: 'Failed to delete image' });
   }
+  finally {
+    const duration = Date.now() - startTime; // Calculate duration
+    statsd.timing('api.post.user.response_time', duration); // Log API call duration
+}
 };
