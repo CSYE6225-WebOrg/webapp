@@ -3,6 +3,7 @@ import app from '../app.js';
 import User from '../models/user.js';
 import { syncDb } from '../models/user.js';
 import { sequelize, checkDbConnection } from '../services/connectionService.js';
+import statsd from '../metrics.js';
 
 beforeAll(async () => {
   // Sync the database before running tests
@@ -12,6 +13,7 @@ beforeAll(async () => {
 
 afterAll(async () => {
   // Close database connection after tests are done
+  statsd.socket.close();
   await User.destroy({ where: {} });
 });
 
@@ -59,7 +61,7 @@ describe('User API Endpoints and Authenticator', () => {
 
   it('should return 401 for invalid credentials (no auth headers)', async () => {
     const response = await request(app)
-      .get('/v1/user');
+      .get('/v1/user/self');
 
     expect(response.statusCode).toEqual(401);
   });
@@ -67,7 +69,7 @@ describe('User API Endpoints and Authenticator', () => {
   it('should return 401 for invalid credentials (wrong password)', async () => {
     const invalidAuthCredentials = Buffer.from(`${testUserCredentials.email}:WrongPass123`).toString('base64');
     const response = await request(app)
-      .get('/v1/user')
+      .get('/v1/user/self')
       .set('Authorization', `Basic ${invalidAuthCredentials}`);
 
     expect(response.statusCode).toEqual(401);
@@ -76,7 +78,7 @@ describe('User API Endpoints and Authenticator', () => {
 
   it('should authenticate and get user info', async () => {
     const response = await request(app)
-      .get('/v1/user')
+      .get('/v1/user/self')
       .set('Authorization', `Basic ${authCredentials}`);
 
     expect(response.statusCode).toEqual(200);
@@ -88,7 +90,7 @@ describe('User API Endpoints and Authenticator', () => {
 
   it('should return 400 when JSON body is sent with auth request', async () => {
     const response = await request(app)
-      .get('/v1/user')
+      .get('/v1/user/self')
       .set('Authorization', `Basic ${authCredentials}`)
       .send({ randomData: 'This should not be here' });
 
@@ -96,5 +98,5 @@ describe('User API Endpoints and Authenticator', () => {
     
   });
 
-  
+
 });

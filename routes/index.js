@@ -1,6 +1,7 @@
 import express from 'express';
 import healthRoutes from './healthCheckRoutes.js';
 import userRoutes from './userRoutes.js';
+import userProfileRoutes from './userProfileRoutes.js';
 import { sendErrorResponse } from '../controllers/responseHandler.js';
 
 
@@ -11,6 +12,9 @@ router.use('/healthz', healthRoutes);
 
 // Integrate user-related routes
 router.use('/v1/user', userRoutes);
+
+//Integrate user-pic related routes
+router.use('/v1/user/self', userProfileRoutes)
 
 /**
  * @route   ALL *

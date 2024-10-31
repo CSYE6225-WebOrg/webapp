@@ -138,6 +138,11 @@ build {
     destination = "/tmp/"
   }
 
+  # provisioner "file" {
+  #   source      = "./cloudwatch-config.json"
+  #   destination = "/tmp/"
+  # }
+
   provisioner "shell" {
     environment_vars = ["DB_NAME=${var.DB_NAME}",
       "DB_USER=${var.DB_USER}",
@@ -150,6 +155,7 @@ build {
     scripts = [
       "./scripts/unzip.sh",
       "./scripts/setDependencies.sh",
+      "./scripts/cloudWatch.sh",
       "./scripts/systemSetup.sh"
     ]
   }
