@@ -133,3 +133,6 @@ dist
 # Ignore Packer variable files
 *.pkrvars.hcl
 *.pkrvars
+
+#ignore zips
+*.zip
