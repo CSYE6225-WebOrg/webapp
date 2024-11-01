@@ -26,7 +26,14 @@ export const createUser = async (request, response) => {
   const contentType = request.get('content-type');
   if (contentType !== 'application/json') {
     //response.status(400).send();
-    logger.info("Unsopported payload, hence not processed");
+    logger.error({
+      message: "Error: Unsopported payload, hence not processed",
+      httpRequest: {
+          requestMethod: request.method,
+          requestUrl: request.originalUrl,
+          status: 415,
+      }
+  })
     sendErrorResponse(response, 415, 'payload not supported');
     return;
   }
@@ -34,12 +41,26 @@ export const createUser = async (request, response) => {
 
   // Validate required fields
   if (!email || !password || !firstName || !lastName) {
-    logger.error("Bad Request: Missing required fields to process the request");
-    return sendErrorResponse(response, 400, 'Missing required fields.');
+    logger.error({
+      message: "Error: Bad Request- Missing required fields to process the request",
+      httpRequest: {
+          requestMethod: request.method,
+          requestUrl: request.originalUrl,
+          status: 415,
+      }
+  })
+    return sendErrorResponse(response, 415, 'Missing required fields.');
   }
   //Validate email
   if(!userService.validateMail(email)){
-    logger.info("Invalid email, hence not processed");
+    logger.error({
+      message: "Error: Invalid email, hence not processed",
+      httpRequest: {
+          requestMethod: request.method,
+          requestUrl: request.originalUrl,
+          status: 400,
+      }
+  })
     return sendErrorResponse(response, 400, 'Invalid email');
   }
 
@@ -48,7 +69,14 @@ export const createUser = async (request, response) => {
 
     if (authorizationHeader) {
       //response.status(401).send();
-      logger.info("Request has invalid header parameters");
+      logger.error({
+        message: "Error: Request has invalid header parameters",
+        httpRequest: {
+            requestMethod: request.method,
+            requestUrl: request.originalUrl,
+            status: 401,
+        }
+    })
       sendErrorResponse(response, 401, 'Invalid Request');
       return;
     }
@@ -59,7 +87,14 @@ export const createUser = async (request, response) => {
     const existingUser = await User.findOne({ where: { email } });
 
     if (existingUser) {
-      logger.error("Bad Request: User already exists");
+      logger.error({
+        message: "Error: Bad Request- User already exists",
+        httpRequest: {
+            requestMethod: request.method,
+            requestUrl: request.originalUrl,
+            status: 401,
+        }
+    })
       return sendErrorResponse(response, 401, 'User with this email already exists.');
     }
 
@@ -78,10 +113,24 @@ export const createUser = async (request, response) => {
 
     // Exclude password from the response
     const { password: _, ...userData } = newUser.toJSON();
-    logger.info("New user created");
+    logger.info({
+      message: "INFO:User created successfully",
+      httpRequest: {
+          requestMethod: request.method,
+          requestUrl: request.originalUrl,
+          status: 201,
+      }
+  })
     return sendSuccessResponse(response, 201, userData);
   } catch (error) {
-    logger.error("Error creating new user");
+    logger.error({
+      message: "Error: Error creating user",
+      httpRequest: {
+          requestMethod: request.method,
+          requestUrl: request.originalUrl,
+          status: 500,
+      }
+  })
     console.error('Error creating user:', error);
     return sendErrorResponse(response, 500, 'Internal Server Error: Unable to create user.');
   }
@@ -101,7 +150,14 @@ export const getUser = async (request, response) => {
   if (!dbConnection) {
     const duration = Date.now() - startTime; // Calculate duration
     statsd.timing('api.post.user.response_time', duration); // Log API call duration
-    logger.error("Error: Database not connected");
+    logger.error({
+      message: "Error: Database connection failed",
+      httpRequest: {
+          requestMethod: request.method,
+          requestUrl: request.originalUrl,
+          status: 503,
+      }
+  })
     sendErrorResponse(response, 503, 'Service Unavailable');
     return;
   } else {
@@ -110,7 +166,14 @@ export const getUser = async (request, response) => {
       const authorizationHeader = request.headers.authorization;
       //Unauthorized user
       if (!authorizationHeader) {
-        logger.error("Error: Unauthorized user");
+        logger.error({
+          message: "Error: Missing Authorization field",
+          httpRequest: {
+              requestMethod: request.method,
+              requestUrl: request.originalUrl,
+              status: 400,
+          }
+      })
         sendErrorResponse(response, 400, 'Missing Authorization field');
         return;
       }
@@ -125,7 +188,14 @@ export const getUser = async (request, response) => {
         Object.keys(request.query).length != 0
       ) {
         //Bad request since api is sending a body or has query params
-      logger.warn('Bad request: invalid content-type or request body/query params present');
+      logger.error({
+        message: "Error: invalid content-type or request body/query params present",
+        httpRequest: {
+            requestMethod: request.method,
+            requestUrl: request.originalUrl,
+            status: 400,
+        }
+    })
        sendErrorResponse(response, 400, 'Bad Request');
         return;
       }
@@ -134,11 +204,26 @@ export const getUser = async (request, response) => {
 
   // Exclude the password from the response
   const { password: _, ...userData } = user.toJSON();
-  logger.info("Authorized user");
+  logger.info({
+    message: "INFO:Authorized User",
+    httpRequest: {
+        requestMethod: request.method,
+        requestUrl: request.originalUrl,
+        status: 200,
+    }
+})
 
   return sendSuccessResponse(response, 200, userData);
 } catch (error) {
-  logger.error("Error: Database not connected");
+  logger.error({
+    message: "Error: Unable to retrieve user information.",
+    httpRequest: {
+        requestMethod: request.method,
+        requestUrl: request.originalUrl,
+        status: 500,
+    }
+})
+  
   console.error('Error retrieving user information:', error);
   return sendErrorResponse(response, 500, 'Internal Server Error: Unable to retrieve user information.');
 }
@@ -161,7 +246,15 @@ export const updateUser = async (request, response) => {
       //Bad request if body is not in JSON format
       const contentType = request.get("Content-Type");
       if (!contentType || contentType !== "application/json") {
-        loggger.info("Bad Request: Head options method/Params not allowed");
+
+        logger.error({
+          message: "Error:  Head options method/Params not allowed",
+          httpRequest: {
+              requestMethod: request.method,
+              requestUrl: request.originalUrl,
+              status: 400,
+          }
+      })
         response.status(400).send();
         return;
       }
@@ -175,7 +268,14 @@ export const updateUser = async (request, response) => {
   // }
 
   if ((!password && !firstName && !lastName) || otherFields.length > 0) {
-    logger.error("Missing required fields");
+    logger.error({
+      message: "Error: Missing required fields",
+      httpRequest: {
+          requestMethod: request.method,
+          requestUrl: request.originalUrl,
+          status: 400,
+      }
+  })
     return sendErrorResponse(response, 400, 'Missing required fields.');
   }
 
@@ -187,7 +287,15 @@ export const updateUser = async (request, response) => {
       user.password = hashedPassword;
     }
     if(user.email!==email){
-      loggger.info("Bad Request: User email cannot be updated");
+      logger.error({
+        message: "Error: Email cannot be updated",
+        httpRequest: {
+            requestMethod: request.method,
+            requestUrl: request.originalUrl,
+            status: 400,
+        }
+    })
+      
       return sendErrorResponse(response, 400, 'Email cannot be updated');
     }
 
@@ -199,10 +307,24 @@ export const updateUser = async (request, response) => {
 
     // Exclude the password from the response
     const { password: _, ...userData } = user.toJSON();
-    logger.info("Success: User updated");
+    logger.info({
+      message: "INFO:User updated successfully",
+      httpRequest: {
+          requestMethod: request.method,
+          requestUrl: request.originalUrl,
+          status: 204,
+      }
+  })
     return sendResponse(response, 204, '');
   } catch (error) {
-    logger.error('Error updating user:', error);
+    logger.error({
+      message: "Error: Unable to update user",
+      httpRequest: {
+          requestMethod: request.method,
+          requestUrl: request.originalUrl,
+          status: 500,
+      }
+  })
     console.error('Error updating user:', error);
     return sendErrorResponse(response, 500, 'Internal Server Error: Unable to update user.');
   }
@@ -217,10 +339,18 @@ export const updateUser = async (request, response) => {
 export const userInvalidMethods = (request, response) => {
   const startTime = Date.now();
   statsd.increment('api.post.user.calls');
-  logger.info("Bad Request: Method not allowed 405 response");
-    return sendErrorResponse(response, 405, 'Method not allowed');
-    const duration = Date.now() - startTime; // Calculate duration
-    statsd.timing('api.post.user.response_time', duration); // Log API call duration
+  logger.error({
+    message: "Error: Method not allowed",
+    httpRequest: {
+        requestMethod: request.method,
+        requestUrl: request.originalUrl,
+        status: 405,
+    }
+})
+const duration = Date.now() - startTime; // Calculate duration
+  statsd.timing('api.post.user.response_time', duration); // Log API call duration
+  return sendErrorResponse(response, 405, 'Method not allowed');
+  
 };
 
 
@@ -232,7 +362,14 @@ export const uploadPic = async (request, response) => {
   const dbConnection = await checkDbConnection();
 
   if (!dbConnection) {
-    logger.error("Database service unavailable");
+    logger.error({
+      message: "Error: Service Unavailable",
+      httpRequest: {
+          requestMethod: request.method,
+          requestUrl: request.originalUrl,
+          status: 503,
+      }
+  })
     sendErrorResponse(response, 503, 'Service Unavailable');
     return;
   } else {
@@ -243,13 +380,27 @@ export const uploadPic = async (request, response) => {
     
       //Unauthorized user
       if (!authorizationHeader) {
-        logger.error("Bad Request: Missing Auth fields");
+        logger.error({
+          message: "Error: Missing Authorization field",
+          httpRequest: {
+              requestMethod: request.method,
+              requestUrl: request.originalUrl,
+              status: 400,
+          }
+      })
         sendErrorResponse(response, 400, 'Missing Authorization field');
         return;
       }
 
   if (!user || !file) {
-    logger.error("User and pic are required");
+    logger.error({
+      message: "User ID and file are required",
+      httpRequest: {
+          requestMethod: request.method,
+          requestUrl: request.originalUrl,
+          status: 400,
+      }
+  })
     return response.status(400).json({ error: 'User ID and file are required' });
   }
 
@@ -278,7 +429,14 @@ export const uploadPic = async (request, response) => {
       user_id: user.id,
     });
 
-    logger.info("Image uploaded successfully");
+    logger.info({
+      message: "INFO:Image uploaded successfully",
+      httpRequest: {
+          requestMethod: request.method,
+          requestUrl: request.originalUrl,
+          status: 201,
+      }
+  })
     response.status(201).json({
       message: 'Image uploaded successfully',
       data: newImage
@@ -286,7 +444,14 @@ export const uploadPic = async (request, response) => {
     statsd.timing('db.create_user.query_time', Date.now()- startDTime);
   } catch (error) {
     console.error('Error uploading image:', error);
-    logger.error('Error uploading image:', error);
+    logger.error({
+      message: "Error: Failed to upload image",
+      httpRequest: {
+          requestMethod: request.method,
+          requestUrl: request.originalUrl,
+          status: 500,
+      }
+  })
     response.status(500).json({ error: 'Failed to upload image' });
   }
   finally {
@@ -297,7 +462,14 @@ export const uploadPic = async (request, response) => {
 }
 catch(error){
   console.error('Error uploading image:', error);
-  logger.error('Error uploading image:', error);
+  logger.error({
+    message: "Error: Failed to upload image",
+    httpRequest: {
+        requestMethod: request.method,
+        requestUrl: request.originalUrl,
+        status: 500,
+    }
+})
   response.status(500).json({ error: 'Failed to upload image' });
 }
 finally {
@@ -317,16 +489,37 @@ export const getPic = async (request, response) => {
     const startDTime = Date.now();
     const imageRecord = await Image.findOne({ where: { user_id: userId } });
     if (!imageRecord){ 
-      logger.error('Image not found', error);
+      logger.error({
+        message: "Error: Image not found",
+        httpRequest: {
+            requestMethod: request.method,
+            requestUrl: request.originalUrl,
+            status: 404,
+        }
+    })
       return response.status(404).json({ error: 'Image not found' });
     }
     // Generate presigned URL
     const url = await s3Service.getFileUrl(userId);
     statsd.timing('db.create_user.query_time', Date.now()- startDTime);
-    logger.info("Generated presigned url");
+    logger.info({
+      message: "INFO: Generated presigned url",
+      httpRequest: {
+          requestMethod: request.method,
+          requestUrl: request.originalUrl,
+          status: 200,
+      }
+  })
     response.status(200).json({ url:url });
   } catch (error) {
-    logger.error('Error generating presigned URL:', error);
+    logger.error({
+      message: "Error: Error generating presigned UR",
+      httpRequest: {
+          requestMethod: request.method,
+          requestUrl: request.originalUrl,
+          status: 500,
+      }
+  })
     console.error('Error generating presigned URL:', error);
     response.status(500).json({ error: 'Failed to generate URL' });
   }
@@ -344,7 +537,14 @@ export const deletePic = async (request, response) =>{
     const startDTime = Date.now();
     const imageRecord = await Image.findOne({ where: { user_id: userId } });
     if (!imageRecord){ 
-      logger.error('Image not found', error);
+      logger.error({
+        message: "Error: Image not found",
+        httpRequest: {
+            requestMethod: request.method,
+            requestUrl: request.originalUrl,
+            status: 404,
+        }
+    })
       return response.status(404).json({ error: 'Image not found' });
     }
     // Delete from S3 and then remove database record
@@ -352,9 +552,24 @@ export const deletePic = async (request, response) =>{
     await imageRecord.destroy();
     statsd.timing('db.create_user.query_time', Date.now()- startDTime);
     logger.info('image deleted successfully');
+    logger.info({
+      message: "INFO:Image deleted successfully",
+      httpRequest: {
+          requestMethod: request.method,
+          requestUrl: request.originalUrl,
+          status: 200,
+      }
+  })
     response.status(200).json({ message: 'Image deleted successfully' });
   } catch (error) {
-    logger.error('Error deleting image:', error);
+    logger.error({
+      message: "Error: Error deleting image",
+      httpRequest: {
+          requestMethod: request.method,
+          requestUrl: request.originalUrl,
+          status: 500,
+      }
+  })
     console.error('Error deleting image:', error);
     response.status(500).json({ error: 'Failed to delete image' });
   }
