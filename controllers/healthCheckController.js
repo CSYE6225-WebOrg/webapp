@@ -5,7 +5,7 @@
 // Health check controller with try catch
 export const healthCheck = async (request, response) => {
   const startTime = Date.now();
-  statsd.increment('api.post.user.calls');
+  statsd.increment('api.healthcheck.calls');
   try {
     const contentTypeLength = request.get("content-type")
     ? request.get("content-type").length
@@ -27,8 +27,9 @@ export const healthCheck = async (request, response) => {
 
   // Check the database connection
   const startDTime = Date.now();
+  statsd.increment('db.check_db.query_time.call');
   const dbConnected = await checkDbConnection();
-  statsd.timing('db.create_user.query_time', Date.now()- startDTime);
+  statsd.timing('db.check_db.query_time', Date.now()- startDTime);
 
   if (dbConnected) {
     logger.info({
@@ -65,14 +66,14 @@ export const healthCheck = async (request, response) => {
 }
 finally{
   const duration = Date.now() - startTime; // Calculate duration
-  statsd.timing('api.post.user.response_time', duration); // Log API call duration
+  statsd.timing('api.healthcheck.response_time', duration); // Log API call duration
 }
 };
 
 //deny methods other than GET
 export const healthCheckInvalidMethods = (request, response) => {
   const startTime = Date.now();
-  statsd.increment('api.post.user.calls');
+  statsd.increment('api.healthcheck.calls');
   if (request.method != "GET") {
     logger.error({
       message: "Error: method except GET is not allowed",
@@ -83,14 +84,14 @@ export const healthCheckInvalidMethods = (request, response) => {
       }
   })
   const duration = Date.now() - startTime; // Calculate duration
-  statsd.timing('api.post.user.response_time', duration); // Log API call duration
+  statsd.timing('api.healthcheck.response_time', duration); // Log API call duration
     return sendErrorResponse(response, 405, 'Method not allowed');
   }
 };
 
 export const healthCheckAllMethods = (request, response) => {
   const startTime = Date.now();
-  statsd.increment('api.post.user.calls');
+  statsd.increment('api.healthcheck.calls');
   logger.error({
     message: "Error: Wrong route sent for healthz methods",
     httpRequest: {
@@ -100,7 +101,7 @@ export const healthCheckAllMethods = (request, response) => {
     }
 })
 const duration = Date.now() - startTime; // Calculate duration
-statsd.timing('api.post.user.response_time', duration); // Log API call duratio
+statsd.timing('api.healthcheck.response_time', duration); // Log API call duratio
     return sendErrorResponse(response, 405, 'Method not allowed');
   
 };
