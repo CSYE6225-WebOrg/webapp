@@ -2,7 +2,7 @@ import AWS from 'aws-sdk';
 
 
 const s3 = new AWS.S3({
-   region: process.env.AWS_REGION
+  region: process.env.AWS_REGION
 });
 
 // const s3 = new AWS.S3();
@@ -25,7 +25,20 @@ const s3Upload = await s3.upload(params).promise();
 
 // Generate a Presigned URL to Get File from S3
 export const getFileUrl = async (userId) => {
-  const key = `user-images/${userId}/snowflake3.png`;
+  // const key = `user-images/${userId}/snowflake3.png`;
+  const prefix = `user-images/${userId}/`;
+
+  const listedObjects = await s3.listObjectsV2({
+    Bucket: BUCKET_NAME,
+    Prefix: prefix
+  }).promise();
+
+  if (!listedObjects.Contents.length) {
+    throw new Error('No files found for this user.');
+  }
+
+  const key = listedObjects.Contents[0].Key;
+
   const params = {
     Bucket: BUCKET_NAME,
     Key: key,
@@ -36,7 +49,21 @@ export const getFileUrl = async (userId) => {
 
 // Delete File from S3
 export const deleteFile = async (userId) => {
-  const key = `user-images/${userId}/snowflake3.png`;
+  // const key = `user-images/${userId}/snowflake3.png`;
+
+  const prefix = `user-images/${userId}/`;
+
+  const listedObjects = await s3.listObjectsV2({
+    Bucket: BUCKET_NAME,
+    Prefix: prefix
+  }).promise();
+
+  if (!listedObjects.Contents.length) {
+    throw new Error('No files found for this user.');
+  }
+
+  const key = listedObjects.Contents[0].Key;
+
   const params = {
     Bucket: BUCKET_NAME,
     Key: key
