@@ -1,5 +1,6 @@
 import { DataTypes } from "sequelize";
 import {Image} from "./image.js";
+import Token from "./token.js";
 import { sequelize, checkDbConnection } from "../services/connectionService.js";
 
 // Define the User model
@@ -50,6 +51,10 @@ export const User = sequelize.define("User",
         field: 'account_updated',
         
       },
+      verified: {
+        type: DataTypes.BOOLEAN,
+        defaultValue: false,
+      },
     },
     {
       tableName: 'users',
@@ -68,6 +73,9 @@ export const User = sequelize.define("User",
 
   User.hasOne(Image, { foreignKey: 'user_id', onDelete: 'CASCADE' });
   Image.belongsTo(User, { foreignKey: 'user_id' });
+
+  User.hasMany(Token, { foreignKey: 'userId', onDelete: 'CASCADE' });
+  Token.belongsTo(User, { foreignKey: 'userId' });
 
     //sync the database connection
     // export const syncDb = async () => {

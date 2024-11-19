@@ -2,6 +2,7 @@
 import  express  from 'express';
 import * as userController from '../controllers/userController.js';
 import authenticate from '../utils/authenticator.js';
+import verify from '../utils/verification.js';
 import multer from 'multer';
 
 const userProfileRoutes = express.Router();
@@ -20,7 +21,7 @@ const upload = multer({
 //Stop head
 userProfileRoutes.head('', userController.userInvalidMethods);
 
-userProfileRoutes.put('', authenticate, userController.updateUser);
+userProfileRoutes.put('', authenticate, verify, userController.updateUser);
 
 
 /**
@@ -28,7 +29,7 @@ userProfileRoutes.put('', authenticate, userController.updateUser);
  * @desc    Get the authenticated user's account information
  * @access  Private (Requires Basic Authentication)
  */
- userProfileRoutes.get('', authenticate, userController.getUser);
+ userProfileRoutes.get('', authenticate, verify, userController.getUser);
 
  userProfileRoutes.all('', userController.userInvalidMethods);
 
@@ -37,11 +38,11 @@ userProfileRoutes.put('', authenticate, userController.updateUser);
  * 
  */
 userProfileRoutes.head('/pic', userController.userInvalidMethods);
-userProfileRoutes.post('/pic', authenticate, upload.single('file'), userController.uploadPic);
+userProfileRoutes.post('/pic', authenticate, verify, upload.single('file'), userController.uploadPic);
 
-userProfileRoutes.get('/pic', authenticate, userController.getPic);
+userProfileRoutes.get('/pic', authenticate,verify, userController.getPic);
 
-userProfileRoutes.delete('/pic', authenticate, userController.deletePic);
+userProfileRoutes.delete('/pic', authenticate,verify, userController.deletePic);
 
 userProfileRoutes.all('/pic', userController.userInvalidMethods);
 

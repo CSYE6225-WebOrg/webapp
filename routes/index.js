@@ -2,6 +2,7 @@ import express from 'express';
 import healthRoutes from './healthCheckRoutes.js';
 import userRoutes from './userRoutes.js';
 import userProfileRoutes from './userProfileRoutes.js';
+import verifyRoutes from './verifyRoutes.js';
 import { sendErrorResponse } from '../controllers/responseHandler.js';
 
 
@@ -15,6 +16,9 @@ router.use('/v1/user', userRoutes);
 
 //Integrate user-pic related routes
 router.use('/v1/user/self', userProfileRoutes)
+
+// Integrate health check routes
+router.use('/verify', verifyRoutes);
 
 /**
  * @route   ALL *
