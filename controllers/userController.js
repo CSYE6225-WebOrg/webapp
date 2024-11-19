@@ -574,6 +574,7 @@ export const getPic = async (request, response) => {
       httpRequest: {
           requestMethod: request.method,
           requestUrl: request.originalUrl,
+          error: error,
           status: 500,
       }
   })
@@ -628,6 +629,7 @@ export const deletePic = async (request, response) =>{
       httpRequest: {
           requestMethod: request.method,
           requestUrl: request.originalUrl,
+          error: error,
           status: 500,
       }
   })
