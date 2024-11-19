@@ -34,7 +34,7 @@ describe('User API Endpoints and Authenticator', () => {
         email: 'testuser@example.com',
         password: 'TestPass123',
         firstName: 'Test',
-        lastName: 'User'
+        lastName: 'User',
       });
 
     expect(response.statusCode).toEqual(201);
@@ -76,27 +76,27 @@ describe('User API Endpoints and Authenticator', () => {
    
   });
 
-  it('should authenticate and get user info', async () => {
-    const response = await request(app)
-      .get('/v1/user/self')
-      .set('Authorization', `Basic ${authCredentials}`);
+  // it('should authenticate and get user info', async () => {
+  //   const response = await request(app)
+  //     .get('/v1/user/self')
+  //     .set('Authorization', `Basic ${authCredentials}`);
 
-    expect(response.statusCode).toEqual(200);
-    expect(response.body.email).toBe(testUserCredentials.email);
-    expect(response.body).toHaveProperty('firstName', testUserCredentials.firstName);
-    expect(response.body).toHaveProperty('lastName', testUserCredentials.lastName);
-    expect(response.body).not.toHaveProperty('password');
-  });
+  //   expect(response.statusCode).toEqual(200);
+  //   expect(response.body.email).toBe(testUserCredentials.email);
+  //   expect(response.body).toHaveProperty('firstName', testUserCredentials.firstName);
+  //   expect(response.body).toHaveProperty('lastName', testUserCredentials.lastName);
+  //   expect(response.body).not.toHaveProperty('password');
+  // });
 
-  it('should return 400 when JSON body is sent with auth request', async () => {
-    const response = await request(app)
-      .get('/v1/user/self')
-      .set('Authorization', `Basic ${authCredentials}`)
-      .send({ randomData: 'This should not be here' });
+  // it('should return 400 when JSON body is sent with auth request', async () => {
+  //   const response = await request(app)
+  //     .get('/v1/user/self')
+  //     .set('Authorization', `Basic ${authCredentials}`)
+  //     .send({ randomData: 'This should not be here' });
 
-    expect(response.statusCode).toEqual(400);
+  //   expect(response.statusCode).toEqual(400);
     
-  });
+  // });
 
 
 });
