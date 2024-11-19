@@ -219,7 +219,9 @@ export const getUser = async (request, response) => {
   const user = request.user;  // User has been added by the authenticator
 
   // Exclude the password from the response
-  const { password: _, ...userData } = user.toJSON();
+const userData = user.toJSON();
+delete userData.password;
+delete userData.verified;
   logger.info({
     message: "INFO:Authorized User",
     httpRequest: {
@@ -323,7 +325,9 @@ export const updateUser = async (request, response) => {
     statsd.timing('db.update_user.query_time', Date.now()- startDTime);
 
     // Exclude the password from the response
-    const { password: _, ...userData } = user.toJSON();
+    const userData = user.toJSON();
+    delete userData.password;
+    delete userData.verified;
     logger.info({
       message: "INFO:User updated successfully",
       httpRequest: {
@@ -383,6 +387,7 @@ export const uploadPic = async (request, response) => {
     logger.error({
       message: "Error: Bad Request",
       httpRequest: {
+          error: error,
           requestMethod: request.method,
           requestUrl: request.originalUrl,
           status: 400,
