@@ -3,12 +3,15 @@
 import * as encryption from '../utils/encrypt.js';
 import User from '../models/user.js';
 import Image from '../models/image.js';
+import Token from '../models/token.js';
 import { checkDbConnection } from '../services/connectionService.js';
 import { sendResponse, sendSuccessResponse,sendErrorResponse } from './responseHandler.js';
 import *  as userService from '../services/userService.js';
 import * as s3Service from '../services/s3Service.js';
 import logger from '../winstonLogger.js';
 import statsd from '../metrics.js';
+import { generateVerificationToken } from '../services/tokenService.js';
+import { sendVerificationLinkToLambda } from '../services/snsService.js';
 
 /**
  * createUser - Creates a new user account.
@@ -110,10 +113,19 @@ export const createUser = async (request, response) => {
       lastName,
     });
 
+    // Generate verification link using the token service
+    var verificationLink = await generateVerificationToken(newUser.id);
+    var sendVerification = await sendVerificationLinkToLambda(newUser.email, verificationLink);
+    console.log("verification link", verificationLink);
+
     statsd.timing('db.create_user.query_time', Date.now()- startDTime);
 
     // Exclude password from the response
-    const { password: _, ...userData } = newUser.toJSON();
+    // const { password: _,verified: __, ...userData } = newUser.toJSON();
+    const userData = newUser.toJSON();
+    delete userData.password;
+    delete userData.verified;
+    
     logger.info({
       message: "INFO:User created successfully",
       httpRequest: {
@@ -367,7 +379,7 @@ export const uploadPic = async (request, response) => {
   
    const validMimeTypes = ['image/png', 'image/jpg', 'image/jpeg'];
    if (!file || !validMimeTypes.includes(file.mimetype)) {
-   
+   console.log('error');
     logger.error({
       message: "Error: Bad Request",
       httpRequest: {
@@ -515,9 +527,10 @@ export const getPic = async (request, response) => {
   const startTime = Date.now();
   statsd.increment('api.get.userimg.calls');
   const userId = request.user.id;
+  var startDTime = Date.now();
 
   try {
-    const startDTime = Date.now();
+    startDTime = Date.now();
     statsd.increment('db.get_userimg.calls');
     const imageRecord = await Image.findOne({ where: { user_id: userId } });
     statsd.timing('db.get_userimg.query_time', Date.now()- startDTime);
@@ -536,6 +549,8 @@ export const getPic = async (request, response) => {
     startDTime = Date.now();
     statsd.increment('db.get_userimg.calls');
     const url = await s3Service.getFileUrl(userId);
+    const record = await Image.findOne({ where: { user_id: userId } });
+    const imageData = record.toJSON();
     statsd.timing('db.get_userimg.query_time', Date.now()- startDTime);
     logger.info({
       message: "INFO: Generated presigned url",
@@ -545,7 +560,9 @@ export const getPic = async (request, response) => {
           status: 200,
       }
   })
-    response.status(200).json({ url:url });
+    response.status(200).json({
+      imageData
+    });;
   } catch (error) {
     logger.error({
       message: "Error: Error generating presigned UR",
@@ -568,8 +585,9 @@ export const deletePic = async (request, response) =>{
   const startTime = Date.now();
   statsd.increment('api.delete.userimg.calls');
   const userId = request.user.id;
+  var startDTime = Date.now();
   try {
-    const startDTime = Date.now();
+    startDTime = Date.now();
     statsd.increment('db.delete_userimg.call');
     const imageRecord = await Image.findOne({ where: { user_id: userId } });
     statsd.timing('db.delete_userimg.query_time', Date.now()- startDTime);
@@ -615,4 +633,57 @@ export const deletePic = async (request, response) =>{
     const duration = Date.now() - startTime; // Calculate duration
     statsd.timing('api.delete.userimg.response_time', duration); // Log API call duration
 }
+};
+
+export const verifyUserEmail = async (request, response) =>{
+  const startTime = Date.now();
+  statsd.increment('api.verify.useremail.calls');
+  const token = request.query.token;
+  console.log("tOKEN");
+  console.log(token);
+
+  if (!token) {
+    return sendErrorResponse(response, 400, 'Token is required.');
+  }
+  const startDTime = Date.now();
+  try{
+    const tokenRecord = await Token.findOne({ where: { token } });
+    if (!tokenRecord) {
+    statsd.timing('db.verify_useremail.query_time', Date.now()- startDTime);
+      return sendErrorResponse(response, 400, 'Invalid or expired token.');
+    }
+
+    // Check if token is expired
+    if (new Date() > tokenRecord.expiresAt) {
+    statsd.timing('db.verify_useremail.query_time', Date.now()- startDTime);
+      return sendErrorResponse(response, 400, 'Token has expired.');
+    }
+
+    // Fetch the associated user
+    const user = await User.findByPk(tokenRecord.userId);
+    if (!user) {
+    statsd.timing('db.verify_useremail.query_time', Date.now()- startDTime);
+      return sendErrorResponse(response, 404, 'User not found.');
+    }
+
+    
+    user.verified = true;
+    await user.save();
+
+    // Delete the token to prevent reuse
+    // await tokenRecord.destroy();
+    statsd.timing('db.verify_useremail.query_time', Date.now()- startDTime);
+
+    return sendSuccessResponse(response, 200, {
+      message: 'Email verified successfully.',
+    });
+  } catch(error){
+    console.error('Error verifying user:', error);
+    return sendErrorResponse(response, 500, 'Internal Server Error.');
+  }
+  finally{
+    const duration = Date.now() - startTime; // Calculate duration
+    statsd.timing('api.verify.useremail.response_time', duration); // Log API call duration
+  }
+
 };

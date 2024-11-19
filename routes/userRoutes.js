@@ -2,6 +2,7 @@
 import  express  from 'express';
 import * as userController from '../controllers/userController.js';
 import authenticate from '../utils/authenticator.js';
+import verify from '../utils/verification.js';
 
 const userRoutes = express.Router();
 
@@ -22,7 +23,7 @@ userRoutes.all('', userController.userInvalidMethods);
  * @desc    Update the authenticated user's account information
  * @access  Private (Requires Basic Authentication)
  */
-userRoutes.put('/self', authenticate, userController.updateUser);
+userRoutes.put('/self', authenticate, verify, userController.updateUser);
 
 
 /**
@@ -30,7 +31,7 @@ userRoutes.put('/self', authenticate, userController.updateUser);
  * @desc    Get the authenticated user's account information
  * @access  Private (Requires Basic Authentication)
  */
- userRoutes.get('/self', authenticate, userController.getUser);
+ userRoutes.get('/self', authenticate, verify, userController.getUser);
 
 
 
