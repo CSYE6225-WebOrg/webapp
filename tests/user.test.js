@@ -1,7 +1,7 @@
 import request from 'supertest';
 import app from '../app.js';
 import User from '../models/user.js';
-import { syncDb } from '../models/user.js';
+import { syncDb } from '../services/syncService.js';
 import { sequelize, checkDbConnection } from '../services/connectionService.js';
 import statsd from '../metrics.js';
 
