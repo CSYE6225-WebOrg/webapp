@@ -21,7 +21,7 @@
   
 ## Steps to run the API
 
-1. Clone the repository
+1. Clone the repository()
    ```
    git clone https://github.com/CSYE6225-WebOrg/webapp.git
    cd health-check-api
