@@ -571,7 +571,7 @@ export const getPic = async (request, response) => {
     // response.status(200).json({
     //   imageData
     // });
-    sendResponse(response, 200, imageData);
+    sendSuccessResponse(response, 200, imageData);
   } catch (error) {
     logger.error({
       message: "Error: Error generating presigned UR",
