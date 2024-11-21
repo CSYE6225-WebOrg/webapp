@@ -5,7 +5,7 @@ import { sendErrorResponse } from '../controllers/responseHandler.js';
     const user = req.user; // Assuming user is set in the request by authentication middleware
   
     if (!user || !user.verified) {
-      return sendErrorResponse(res, 403, 'Account is not verified.');
+      return sendErrorResponse(res, 403, 'Account is not verified...');
     }
   
     next();

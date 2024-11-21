@@ -28,6 +28,7 @@ jobs:
       SUBNET_ID: ${{secrets.SUBNET_ID}}
       VPC_ID: ${{secrets.VPC_ID}}
       NODE_ENV: "TEST"
+      DEMO_USER: ${{ secrets.DEMO_USER }}
 
     steps:
       - name: Checkout Code
@@ -46,11 +47,17 @@ jobs:
           sudo mv packer /usr/local/bin/
           packer --version
 
+      - name: Install AWS CLI
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y awscli
+          aws --version
+
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID_DEV }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY_DEV }}
           aws-region: ${{secrets.AWS_REGION}}
 
       - name: create variables.pkrvars.hcl
@@ -82,3 +89,109 @@ jobs:
         run: |
           packer init .
           packer build -var-file=variables.pkrvars.hcl aws.pkr.hcl
+      
+      - name: Share the AMI and Save AMI_ID
+        id: share_ami
+        run: |
+          AMI_ID=$(aws ec2 describe-images \
+              --owners self \
+              --filters "Name=state,Values=available" \
+              --query "Images | sort_by(@, &CreationDate)[-1].ImageId" \
+              --output text)
+
+          if [ -n "$AMI_ID" ]; then
+            echo "Sharing AMI $AMI_ID with DEMO account..."
+            aws ec2 modify-image-attribute --image-id "$AMI_ID" \
+              --launch-permission "{\"Add\": [{\"UserId\": \"${{ env.DEMO_USER }}\"}]}"
+            echo "::set-output name=ami_id::$AMI_ID"
+            echo "$AMI_ID" > ami_id.txt
+          else
+            echo "AMI not found, exiting."
+            exit 1
+          fi
+
+      - name: Upload AMI_ID Artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: ami_id
+          path: ami_id.txt
+
+  update-launch-template:
+    name: Update Launch Template
+    runs-on: ubuntu-latest
+    needs: build-ami
+    env:
+      AWS_REGION: ${{ secrets.AWS_REGION }}
+      DEPLOY_ENVIRONMENT: ${{ secrets.DEPLOY_ENVIRONMENT }}
+      LAUNCH_TEMPLATE_ID: ${{ secrets.LAUNCH_TEMPLATE_ID }}
+      AUTO_SCALING_GROUP_NAME: ${{ secrets.AUTO_SCALING_GROUP_NAME }} # Now using a secret 
+    
+    steps:
+        - name: Download AMI_ID Artifact
+          uses: actions/download-artifact@v3
+          with:
+            name: ami_id
+  
+        - name: Read AMI_ID
+          id: read_ami_id
+          run: |
+            AMI_ID=$(cat ami_id.txt)
+            echo "AMI_ID: $AMI_ID"
+            echo "ami_id=$AMI_ID" >> $GITHUB_ENV
+            - name: Configure AWS Credentials for Dev
+            if: ${{ env.DEPLOY_ENVIRONMENT == 'dev' }}
+            uses: aws-actions/configure-aws-credentials@v1
+            with:
+              aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID_DEV }}
+              aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY_DEV }}
+              aws-region: ${{ env.AWS_REGION_DEV }}
+    
+        - name: Configure AWS Credentials for Demo
+          if: ${{ env.DEPLOY_ENVIRONMENT == 'demo' }}
+          uses: aws-actions/configure-aws-credentials@v1
+          with:
+            aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID_DEMO }}
+            aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY_DEMO }}
+            aws-region: ${{ env.AWS_REGION }}
+        
+        - name: Create new launch template version
+          id: create_lt_version
+          run: |
+            AMI_ID=${{ env.ami_id }}
+            echo "Creating new Launch Template version with AMI ID: $AMI_ID"
+            aws ec2 create-launch-template-version \
+                --launch-template-id ${{ env.LAUNCH_TEMPLATE_ID }} \
+                --source-version 1 \
+                --launch-template-data "{\"ImageId\":\"$AMI_ID\"}" \
+                --no-cli-pager
+        
+        - name: Start Instance Refresh
+          id: start_refresh
+          run: |
+            REFRESH_ID=$(aws autoscaling start-instance-refresh \
+                --auto-scaling-group-name ${{ env.AUTO_SCALING_GROUP_NAME }} \
+                --query "InstanceRefreshId" \
+                --output text \
+                --no-cli-pager)
+            echo "Instance Refresh started with ID: $REFRESH_ID"
+            echo "instance_refresh_id=$REFRESH_ID" >> $GITHUB_ENV
+        
+        - name: Wait for Instance Refresh Completion
+          run: |
+            echo "Waiting for instance refresh to complete..."
+            while true; do
+              STATUS=$(aws autoscaling describe-instance-refreshes \
+                  --auto-scaling-group-name ${{ env.AUTO_SCALING_GROUP_NAME }} \
+                  --query "InstanceRefreshes[?InstanceRefreshId=='${{ env.instance_refresh_id }}'].Status" \
+                  --output text \
+                  --no-cli-pager)
+              echo "Current status: $STATUS"
+              if [[ "$STATUS" == "Successful" ]]; then
+                echo "Instance Refresh completed successfully."
+                break
+              elif [[ "$STATUS" == "Failed" || "$STATUS" == "Cancelled" ]]; then
+                echo "Instance Refresh failed or was cancelled. Exiting."
+                exit 1
+              fi
+              sleep 30
+            done
