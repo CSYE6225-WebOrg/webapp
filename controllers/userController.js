@@ -477,6 +477,8 @@ export const uploadPic = async (request, response) => {
       user_id: user.id,
     });
 
+    const imgData = newImage.toJSON();
+
     logger.info({
       message: "INFO:Image uploaded successfully",
       httpRequest: {
@@ -485,11 +487,11 @@ export const uploadPic = async (request, response) => {
           status: 201,
       }
   })
-    response.status(201).json({
-      message: 'Image uploaded successfully',
-      data: newImage
-    });
+    // response.status(201).json({
+    //   imgData
+    // });
     statsd.timing('db.create_userimg.query_time', Date.now()- startDTime);
+    return sendSuccessResponse(response, 201, imgData);
   } catch (error) {
     console.error('Error uploading image:', error);
     logger.error({
@@ -500,7 +502,8 @@ export const uploadPic = async (request, response) => {
           status: 500,
       }
   })
-    response.status(500).json({ error: 'Failed to upload image' });
+    //response.status(500).json({ error: 'Failed to upload image' });
+    sendErrorResponse(response, 500, { error: 'Failed to upload image' })
   }
   finally {
     const duration = Date.now() - startTime; // Calculate duration
@@ -565,9 +568,10 @@ export const getPic = async (request, response) => {
           status: 200,
       }
   })
-    response.status(200).json({
-      imageData
-    });;
+    // response.status(200).json({
+    //   imageData
+    // });
+    sendResponse(response, 200, imageData);
   } catch (error) {
     logger.error({
       message: "Error: Error generating presigned UR",
@@ -619,10 +623,12 @@ export const deletePic = async (request, response) =>{
       httpRequest: {
           requestMethod: request.method,
           requestUrl: request.originalUrl,
-          status: 200,
+          status: 204,
       }
   })
-    response.status(200).json({ message: 'Image deleted successfully' });
+    //response.status(204).json({ message: 'Image deleted successfully' });
+    return sendResponse(response, 204, '');
+
   } catch (error) {
     logger.error({
       message: "Error: Error deleting image",
