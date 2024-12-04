@@ -15,7 +15,7 @@ router.use('/healthz', healthRoutes);
 router.use('/v1/user', userRoutes);
 
 //Integrate user-pic related routes
-router.use('/v1/user/self', userProfileRoutes)
+router.use('/v2/user/self', userProfileRoutes)
 
 // Integrate health check routes
 router.use('/verify', verifyRoutes);
