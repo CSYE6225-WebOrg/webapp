@@ -31,12 +31,12 @@ variable "subnet_id" {
 
 variable "aws_access_key" {
   type    = string
-  default = "AKIA4T4OB5DY6CDVXQ3C"
+  default = "aws_access_key"
 }
 
 variable "aws_secret_key" {
   type    = string
-  default = "qpYI2zq8+sbhBN+ds3mz1zelrFikJ634BC0mCy38"
+  default = "aws_secret_key"
 }
 
 variable "DB_NAME" {
